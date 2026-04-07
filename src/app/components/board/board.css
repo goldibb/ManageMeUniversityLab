@@ -18,16 +18,50 @@
   margin-bottom: 2rem;
 }
 
-.board-add-task input {
+.board-add-task input,
+.board-add-task__select {
   padding: 0.6em 1em;
   border-radius: 8px;
   border: 1px solid #444;
   background: #1a1a1a;
   color: inherit;
   font-size: 1rem;
-  width: 300px;
 }
 
+.board-add-task input {
+  width: 220px;
+}
+
+.board-add-task__select {
+  width: auto;
+  min-width: 7rem;
+}
+
+.board-welcome {
+  text-align: center;
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.board-hint {
+  text-align: center;
+  font-size: 1rem;
+  margin: -0.5rem 0 1.25rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.board-error {
+  text-align: center;
+  color: #f87171;
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+}
+
+.board-loading {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 1rem;
+}
 .board-add-task input::placeholder {
   color: #888;
 }
@@ -51,7 +85,7 @@
   border: 1px solid #6c4fa0;
 }
 
-.board-column--in_progress {
+.board-column--doing {
   background: #2a2d1e;
   border: 1px solid #8a8a2a;
 }
@@ -89,9 +123,77 @@
   padding: 0.7rem 0.8rem;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   transition: background 0.15s;
+}
+
+.board-task__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.board-task__meta {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.board-task__priority {
+  font-size: 0.75rem;
+  font-weight: 600;
+  align-self: flex-start;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.board-task__priority--low {
+  background: rgba(100, 180, 100, 0.25);
+  color: #8fdf8f;
+}
+
+.board-task__priority--medium {
+  background: rgba(200, 180, 80, 0.25);
+  color: #e8d070;
+}
+
+.board-task__priority--high {
+  background: rgba(220, 90, 90, 0.3);
+  color: #ff8a8a;
+}
+
+.board-task__edit {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.board-task__edit-input,
+.board-task__edit-textarea,
+.board-task__edit select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.4em 0.6em;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background: #1a1a1a;
+  color: inherit;
+  font: inherit;
+}
+
+.board-task__edit-textarea {
+  resize: vertical;
+  min-height: 3rem;
+}
+
+.board-task__edit-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
 .board-task:hover {
@@ -99,8 +201,15 @@
 }
 
 .board-task__title {
-  flex: 1;
   font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.board-task__description {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .board-task__actions {
@@ -129,6 +238,15 @@
   border-color: #646cff;
 }
 
+.board-task__btn--edit {
+  background: rgba(100, 108, 255, 0.2);
+  color: #a5acff;
+}
+
+.board-task__btn--edit:hover {
+  background: rgba(100, 108, 255, 0.35);
+}
+
 .board-task__btn--delete {
   background: rgba(255, 60, 60, 0.15);
   color: #ff6b6b;
@@ -139,7 +257,15 @@
 }
 
 @media (prefers-color-scheme: light) {
-  .board-add-task input {
+  .board-add-task input,
+  .board-add-task__select {
+    background: #fff;
+    border-color: #ccc;
+  }
+
+  .board-task__edit-input,
+  .board-task__edit-textarea,
+  .board-task__edit select {
     background: #fff;
     border-color: #ccc;
   }
@@ -149,7 +275,7 @@
     border-color: #b39ddb;
   }
 
-  .board-column--in_progress {
+  .board-column--doing {
     background: #f5f5e0;
     border-color: #c5c52a;
   }
