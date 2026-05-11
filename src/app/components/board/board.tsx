@@ -1,160 +1,167 @@
-import { useCallback, useEffect, useState } from 'react'
-import './board.css'
-import * as api from '../../api/client'
-import { useActiveProject } from '../../context/ActiveProjectContext'
-import type { Story, StoryPriority, StoryState } from '../../types/story'
+import { useCallback, useEffect, useState } from "react";
+import "./board.css";
+import * as api from "../../api/client";
+import { useActiveProject } from "../../context/ActiveProjectContext";
+import type { Story, StoryPriority, StoryState } from "../../types/story";
+import TaskModal from "../task/task";
 
 const columns: { key: StoryState; label: string }[] = [
-  { key: 'todo', label: 'Czekające na wykonanie' },
-  { key: 'doing', label: 'W trakcie (wykonywane)' },
-  { key: 'done', label: 'Zamknięte' },
-]
+  { key: "todo", label: "Czekające na wykonanie" },
+  { key: "doing", label: "W trakcie (wykonywane)" },
+  { key: "done", label: "Zamknięte" },
+];
 
 const PRIORITY_LABELS: Record<StoryPriority, string> = {
-  low: 'Niski',
-  medium: 'Średni',
-  high: 'Wysoki',
-}
+  low: "Niski",
+  medium: "Średni",
+  high: "Wysoki",
+};
 
 export default function Board() {
-  const { activeProjectId } = useActiveProject()
-  const [stories, setStories] = useState<Story[]>([])
-  const [loading, setLoading] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [listError, setListError] = useState<string | null>(null)
-  const [actionError, setActionError] = useState<string | null>(null)
+  const { activeProjectId } = useActiveProject();
+  const [stories, setStories] = useState<Story[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [listError, setListError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  const [newName, setNewName] = useState('')
-  const [newDescription, setNewDescription] = useState('')
-  const [newPriority, setNewPriority] = useState<StoryPriority>('medium')
+  const [newName, setNewName] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newPriority, setNewPriority] = useState<StoryPriority>("medium");
 
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [editName, setEditName] = useState('')
-  const [editDescription, setEditDescription] = useState('')
-  const [editPriority, setEditPriority] = useState<StoryPriority>('medium')
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editPriority, setEditPriority] = useState<StoryPriority>("medium");
+
+  const [taskModalStory, setTaskModalStory] = useState<Story | null>(null);
 
   const reload = useCallback(async () => {
     if (activeProjectId == null) {
-      setStories([])
-      return
+      setStories([]);
+      return;
     }
-    setLoading(true)
-    setListError(null)
+    setLoading(true);
+    setListError(null);
     try {
-      const list = await api.fetchStories(activeProjectId)
-      setStories(list)
+      const list = await api.fetchStories(activeProjectId);
+      setStories(list);
     } catch (e) {
-      setListError(e instanceof Error ? e.message : 'Nie udało się pobrać historyjek')
-      setStories([])
+      setListError(
+        e instanceof Error ? e.message : "Nie udało się pobrać tasków",
+      );
+      setStories([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [activeProjectId])
+  }, [activeProjectId]);
 
   useEffect(() => {
-    void reload()
-  }, [reload])
+    void reload();
+  }, [reload]);
 
   useEffect(() => {
-    if (editingId == null) return
-    const s = stories.find((x) => x.id === editingId)
+    if (editingId == null) return;
+    const s = stories.find((x) => x.id === editingId);
     if (s) {
-      setEditName(s.name)
-      setEditDescription(s.description)
-      setEditPriority(s.priority)
+      setEditName(s.name);
+      setEditDescription(s.description);
+      setEditPriority(s.priority);
     }
-  }, [editingId, stories])
+  }, [editingId, stories]);
 
-  const noProject = activeProjectId == null
+  const noProject = activeProjectId == null;
 
   const handleCreate = async () => {
-    if (noProject || !newName.trim()) return
-    setBusy(true)
-    setActionError(null)
+    if (noProject || !newName.trim()) return;
+    setBusy(true);
+    setActionError(null);
     try {
       await api.createStory({
         projectId: activeProjectId,
         name: newName.trim(),
         description: newDescription.trim(),
         priority: newPriority,
-        state: 'todo',
-      })
-      setNewName('')
-      setNewDescription('')
-      setNewPriority('medium')
-      await reload()
+        state: "todo",
+      });
+      setNewName("");
+      setNewDescription("");
+      setNewPriority("medium");
+      await reload();
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : 'Błąd zapisu')
+      setActionError(e instanceof Error ? e.message : "Błąd zapisu");
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
-  }
+  };
 
   const handleDelete = async (id: number) => {
-    setBusy(true)
-    setActionError(null)
+    setBusy(true);
+    setActionError(null);
     try {
-      await api.deleteStory(id)
-      if (editingId === id) setEditingId(null)
-      await reload()
+      await api.deleteStory(id);
+      if (editingId === id) setEditingId(null);
+      await reload();
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : 'Błąd usuwania')
+      setActionError(e instanceof Error ? e.message : "Błąd usuwania");
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
-  }
+  };
 
   const handleMove = async (id: number, state: StoryState) => {
-    setBusy(true)
-    setActionError(null)
+    setBusy(true);
+    setActionError(null);
     try {
-      await api.updateStory(id, { state })
-      await reload()
+      await api.updateStory(id, { state });
+      await reload();
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : 'Błąd zmiany stanu')
+      setActionError(e instanceof Error ? e.message : "Błąd zmiany stanu");
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
-  }
+  };
 
   const handleSaveEdit = async () => {
-    if (editingId == null || !editName.trim()) return
-    setBusy(true)
-    setActionError(null)
+    if (editingId == null || !editName.trim()) return;
+    setBusy(true);
+    setActionError(null);
     try {
       await api.updateStory(editingId, {
         name: editName.trim(),
         description: editDescription.trim(),
         priority: editPriority,
-      })
-      setEditingId(null)
-      await reload()
+      });
+      setEditingId(null);
+      await reload();
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : 'Błąd zapisu')
+      setActionError(e instanceof Error ? e.message : "Błąd zapisu");
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
-  }
+  };
 
   return (
     <div className="board-container">
       <h1 className="board-title">Historyjki projektu</h1>
       {noProject ? (
         <p className="board-hint">
-          Wybierz aktywny projekt w nagłówku, aby zobaczyć i edytować historyjki.
+          Wybierz aktywny projekt w nagłówku, aby zobaczyć i edytować taski.
         </p>
       ) : null}
       {listError ? <p className="board-error">{listError}</p> : null}
       {actionError ? <p className="board-error">{actionError}</p> : null}
-      {loading && !noProject ? <p className="board-loading">Ładowanie…</p> : null}
+      {loading && !noProject ? (
+        <p className="board-loading">Ładowanie…</p>
+      ) : null}
 
       <div className="board-add-task">
         <input
           type="text"
-          placeholder="Nazwa historyjki…"
+          placeholder="Nazwa taska"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+          onKeyDown={(e) => e.key === "Enter" && handleCreate()}
           disabled={noProject || busy}
         />
         <input
@@ -162,7 +169,7 @@ export default function Board() {
           placeholder="Opis…"
           value={newDescription}
           onChange={(e) => setNewDescription(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+          onKeyDown={(e) => e.key === "Enter" && handleCreate()}
           disabled={noProject || busy}
         />
         <select
@@ -176,14 +183,21 @@ export default function Board() {
           <option value="medium">{PRIORITY_LABELS.medium}</option>
           <option value="high">{PRIORITY_LABELS.high}</option>
         </select>
-        <button type="button" onClick={() => void handleCreate()} disabled={noProject || busy}>
+        <button
+          type="button"
+          onClick={() => void handleCreate()}
+          disabled={noProject || busy}
+        >
           Dodaj
         </button>
       </div>
 
       <div className="board-columns">
         {columns.map((col) => (
-          <div key={col.key} className={`board-column board-column--${col.key}`}>
+          <div
+            key={col.key}
+            className={`board-column board-column--${col.key}`}
+          >
             <h2 className="board-column__header">{col.label}</h2>
             <div className="board-column__tasks">
               {stories
@@ -207,16 +221,24 @@ export default function Board() {
                         />
                         <select
                           value={editPriority}
-                          onChange={(e) => setEditPriority(e.target.value as StoryPriority)}
+                          onChange={(e) =>
+                            setEditPriority(e.target.value as StoryPriority)
+                          }
                           disabled={busy}
                           aria-label="Priorytet"
                         >
                           <option value="low">{PRIORITY_LABELS.low}</option>
-                          <option value="medium">{PRIORITY_LABELS.medium}</option>
+                          <option value="medium">
+                            {PRIORITY_LABELS.medium}
+                          </option>
                           <option value="high">{PRIORITY_LABELS.high}</option>
                         </select>
                         <div className="board-task__edit-actions">
-                          <button type="button" onClick={() => void handleSaveEdit()} disabled={busy}>
+                          <button
+                            type="button"
+                            onClick={() => void handleSaveEdit()}
+                            disabled={busy}
+                          >
                             Zapisz
                           </button>
                           <button
@@ -231,11 +253,17 @@ export default function Board() {
                     ) : (
                       <>
                         <div className="board-task__body">
-                          <span className="board-task__title">{story.name}</span>
+                          <span className="board-task__title">
+                            {story.name}
+                          </span>
                           {story.description ? (
-                            <span className="board-task__description">{story.description}</span>
+                            <span className="board-task__description">
+                              {story.description}
+                            </span>
                           ) : null}
-                          <span className={`board-task__priority board-task__priority--${story.priority}`}>
+                          <span
+                            className={`board-task__priority board-task__priority--${story.priority}`}
+                          >
                             {PRIORITY_LABELS[story.priority]}
                           </span>
                           <span className="board-task__meta">
@@ -243,14 +271,14 @@ export default function Board() {
                           </span>
                         </div>
                         <div className="board-task__actions">
-                          {col.key !== 'todo' && (
+                          {col.key !== "todo" && (
                             <button
                               type="button"
                               className="board-task__btn board-task__btn--left"
                               onClick={() =>
                                 void handleMove(
                                   story.id,
-                                  col.key === 'doing' ? 'todo' : 'doing',
+                                  col.key === "doing" ? "todo" : "doing",
                                 )
                               }
                               title="Przenieś w lewo"
@@ -259,14 +287,14 @@ export default function Board() {
                               ←
                             </button>
                           )}
-                          {col.key !== 'done' && (
+                          {col.key !== "done" && (
                             <button
                               type="button"
                               className="board-task__btn board-task__btn--right"
                               onClick={() =>
                                 void handleMove(
                                   story.id,
-                                  col.key === 'todo' ? 'doing' : 'done',
+                                  col.key === "todo" ? "doing" : "done",
                                 )
                               }
                               title="Przenieś w prawo"
@@ -275,6 +303,15 @@ export default function Board() {
                               →
                             </button>
                           )}
+                          <button
+                            type="button"
+                            className="board-task__btn board-task__btn--edit"
+                            onClick={() => setTaskModalStory(story)}
+                            title="Zadania"
+                            disabled={noProject || busy}
+                          >
+                            Zadania
+                          </button>
                           <button
                             type="button"
                             className="board-task__btn board-task__btn--edit"
@@ -298,13 +335,23 @@ export default function Board() {
                     )}
                   </div>
                 ))}
-              {!noProject && !loading && stories.filter((s) => s.state === col.key).length === 0 ? (
-                <p className="board-column__empty">Brak historyjek</p>
+              {!noProject &&
+              !loading &&
+              stories.filter((s) => s.state === col.key).length === 0 ? (
+                <p className="board-column__empty">Brak tasków</p>
               ) : null}
             </div>
           </div>
         ))}
       </div>
+
+      {taskModalStory ? (
+        <TaskModal
+          storyId={taskModalStory.id}
+          storyName={taskModalStory.name}
+          onClose={() => setTaskModalStory(null)}
+        />
+      ) : null}
     </div>
-  )
+  );
 }
