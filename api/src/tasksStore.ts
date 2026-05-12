@@ -22,6 +22,7 @@ export function createTask(payload: {
   priority: TaskPriority
   storyId: number
   estimatedTime: number
+  actualTime: number | null
   state: TaskState
   assignedUserId: number | null
 }): Task | null {
@@ -36,6 +37,7 @@ export function createTask(payload: {
     priority: payload.priority,
     storyId: payload.storyId,
     estimatedTime: payload.estimatedTime,
+    actualTime: payload.actualTime ?? null,
     state: payload.state,
     createdAt: now,
     startDate: payload.state === 'doing' || payload.state === 'done' ? now : null,
@@ -58,7 +60,7 @@ export function createTask(payload: {
 
 export function updateTask(
   id: number,
-  patch: Partial<Pick<Task, 'name' | 'description' | 'priority' | 'estimatedTime' | 'state' | 'assignedUserId'>>,
+  patch: Partial<Pick<Task, 'name' | 'description' | 'priority' | 'estimatedTime' | 'actualTime' | 'state' | 'assignedUserId'>>,
 ): Task | null {
   const idx = tasks.findIndex((x) => x.id === id)
   if (idx === -1) return null
@@ -72,6 +74,7 @@ export function updateTask(
   if (patch.description !== undefined) cur.description = patch.description.trim()
   if (patch.priority !== undefined) cur.priority = patch.priority
   if (patch.estimatedTime !== undefined) cur.estimatedTime = patch.estimatedTime
+  if (patch.actualTime !== undefined) cur.actualTime = patch.actualTime
   if (patch.assignedUserId !== undefined) cur.assignedUserId = patch.assignedUserId
   if (patch.state !== undefined) cur.state = patch.state
 

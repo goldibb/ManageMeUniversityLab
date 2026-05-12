@@ -226,7 +226,7 @@ export default function TaskModal({ storyId, storyName, onClose }: TaskModalProp
                           </span>
                         </div>
                         <span className="task-card__meta">
-                          #{task.id} · {task.estimatedTime}h · {userLabel(task.assignedUserId)}
+                          #{task.id} · {task.estimatedTime}h {task.actualTime !== null ? `(${task.actualTime}h)` : ''} · {userLabel(task.assignedUserId)}
                         </span>
                         <select
                           className="task-card__assign-select"
@@ -348,7 +348,7 @@ interface TaskDetailProps {
   task: Task
   storyName: string
   assignableUsers: User[]
-  onChange: (patch: { name?: string; description?: string; priority?: TaskPriority; estimatedTime?: number; assignedUserId?: number | null; state?: TaskState }) => Promise<void>
+  onChange: (patch: { name?: string; description?: string; priority?: TaskPriority; estimatedTime?: number; actualTime?: number | null; assignedUserId?: number | null; state?: TaskState }) => Promise<void>
   onDelete: () => Promise<void>
   onClose: () => void
   busy: boolean
@@ -359,6 +359,9 @@ function TaskDetail({ task, storyName, assignableUsers, onChange, onDelete, onCl
   const [description, setDescription] = useState(task.description)
   const [priority, setPriority] = useState<TaskPriority>(task.priority)
   const [estimatedTime, setEstimatedTime] = useState<string>(String(task.estimatedTime))
+  const [actualTime, setActualTime] = useState<string>(
+    task.actualTime !== null ? String(task.actualTime) : '',
+  )
   const [assignedUserId, setAssignedUserId] = useState<string>(
     task.assignedUserId !== null ? String(task.assignedUserId) : '',
   )
@@ -368,17 +371,21 @@ function TaskDetail({ task, storyName, assignableUsers, onChange, onDelete, onCl
     setDescription(task.description)
     setPriority(task.priority)
     setEstimatedTime(String(task.estimatedTime))
+    setActualTime(task.actualTime !== null ? String(task.actualTime) : '')
     setAssignedUserId(task.assignedUserId !== null ? String(task.assignedUserId) : '')
   }, [task])
 
   const handleSave = async () => {
     const et = Number(estimatedTime)
     if (!name.trim() || !Number.isFinite(et) || et <= 0) return
+    const at = actualTime.trim() === '' ? null : Number(actualTime)
+    if (at !== null && (!Number.isFinite(at) || at < 0)) return
     await onChange({
       name: name.trim(),
       description: description.trim(),
       priority,
       estimatedTime: et,
+      actualTime: at,
       assignedUserId: assignedUserId === '' ? null : Number(assignedUserId),
     })
   }
@@ -406,6 +413,10 @@ function TaskDetail({ task, storyName, assignableUsers, onChange, onDelete, onCl
         <div className="task-detail__field">
           <label>Przewidywany czas (h)</label>
           <input type="number" min={1} step={1} value={estimatedTime} onChange={(e) => setEstimatedTime(e.target.value)} disabled={busy} />
+        </div>
+        <div className="task-detail__field">
+          <label>Zrealizowane roboczogodziny</label>
+          <input type="number" min={0} step={0.5} value={actualTime} onChange={(e) => setActualTime(e.target.value)} disabled={busy} placeholder="—" />
         </div>
         <div className="task-detail__field">
           <label>Przypisana osoba</label>

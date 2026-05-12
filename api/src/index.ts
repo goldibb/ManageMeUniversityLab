@@ -213,11 +213,17 @@ app.post('/tasks', (req, res) => {
   const priority = req.body?.priority as TaskPriority
   const storyId = Number(req.body?.storyId)
   const estimatedTime = Number(req.body?.estimatedTime)
+  const actualTime =
+    req.body?.actualTime === null || req.body?.actualTime === undefined
+      ? null
+      : Number(req.body.actualTime)
   const state = (req.body?.state as TaskState) ?? 'todo'
   const assignedUserId =
-    req.body?.assignedUserId !== undefined && req.body?.assignedUserId !== null
-      ? Number(req.body.assignedUserId)
-      : null
+    req.body?.assignedUserId === null
+      ? null
+      : req.body?.assignedUserId !== undefined
+        ? Number(req.body.assignedUserId)
+        : null
 
   if (!name.trim()) {
     res.status(400).json({ error: 'Brak nazwy' })
@@ -235,6 +241,10 @@ app.post('/tasks', (req, res) => {
     res.status(400).json({ error: 'Nieprawidłowy przewidywany czas' })
     return
   }
+  if (actualTime !== null && (!Number.isFinite(actualTime) || actualTime < 0)) {
+    res.status(400).json({ error: 'Nieprawidłowy zrealizowany czas' })
+    return
+  }
   if (!TASK_STATES.includes(state)) {
     res.status(400).json({ error: 'Nieprawidłowy stan' })
     return
@@ -250,6 +260,7 @@ app.post('/tasks', (req, res) => {
     priority,
     storyId,
     estimatedTime,
+    actualTime,
     state,
     assignedUserId,
   })
@@ -296,6 +307,18 @@ app.patch('/tasks/:id', (req, res) => {
     }
     patch.estimatedTime = et
   }
+  if (req.body?.actualTime !== undefined) {
+    if (req.body.actualTime === null) {
+      patch.actualTime = null
+    } else {
+      const at = Number(req.body.actualTime)
+      if (!Number.isFinite(at) || at < 0) {
+        res.status(400).json({ error: 'Nieprawidłowy zrealizowany czas' })
+        return
+      }
+      patch.actualTime = at
+    }
+  }
   if (req.body?.state !== undefined) {
     if (!TASK_STATES.includes(req.body.state)) {
       res.status(400).json({ error: 'Nieprawidłowy stan' })
@@ -304,12 +327,16 @@ app.patch('/tasks/:id', (req, res) => {
     patch.state = req.body.state
   }
   if (req.body?.assignedUserId !== undefined) {
-    const auid = Number(req.body.assignedUserId)
-    if (!Number.isFinite(auid)) {
-      res.status(400).json({ error: 'Nieprawidłowy assignedUserId' })
-      return
+    if (req.body.assignedUserId === null) {
+      patch.assignedUserId = null
+    } else {
+      const auid = Number(req.body.assignedUserId)
+      if (!Number.isFinite(auid)) {
+        res.status(400).json({ error: 'Nieprawidłowy assignedUserId' })
+        return
+      }
+      patch.assignedUserId = auid
     }
-    patch.assignedUserId = auid
   }
 
   const updated = tasksStore.updateTask(id, patch)

@@ -9,6 +9,7 @@ export interface Task {
   priority: TaskPriority
   storyId: number
   estimatedTime: number
+  actualTime: number | null
   state: TaskState
   createdAt: string
   startDate: string | null
@@ -22,6 +23,7 @@ export interface CreateTaskInput {
   priority: TaskPriority
   storyId: number
   estimatedTime: number
+  actualTime?: number | null
   state?: TaskState
   assignedUserId?: number | null
 }
@@ -31,6 +33,7 @@ export interface UpdateTaskInput {
   description?: string
   priority?: TaskPriority
   estimatedTime?: number
+  actualTime?: number | null
   state?: TaskState
   assignedUserId?: number | null
 }

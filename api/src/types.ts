@@ -46,7 +46,8 @@ export interface Task {
   description: string;
   priority: TaskPriority;
   storyId: number;
-  estimatedTime: number; // roboczogodziny
+  estimatedTime: number; // przewidywane roboczogodziny
+  actualTime: number | null; // zrealizowane roboczogodziny
   state: TaskState;
   createdAt: string;
   startDate: string | null;
