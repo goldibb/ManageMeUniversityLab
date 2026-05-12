@@ -229,7 +229,6 @@ export default function TaskModal({ storyId, storyName, onClose }: TaskModalProp
                           #{task.id} · {task.estimatedTime}h {task.actualTime !== null ? `(${task.actualTime}h)` : ''} · {userLabel(task.assignedUserId)}
                         </span>
                         <select
-                          className="task-card__assign-select"
                           value={task.assignedUserId !== null ? String(task.assignedUserId) : ''}
                           onChange={async (e) => {
                             const val = e.target.value
@@ -248,15 +247,7 @@ export default function TaskModal({ storyId, storyName, onClose }: TaskModalProp
                           }}
                           disabled={busy}
                           aria-label="Przypisz do"
-                          style={{
-                            fontSize: '0.8rem',
-                            padding: '0.2em 0.4em',
-                            borderRadius: '6px',
-                            border: '1px solid #444',
-                            background: '#1a1a1a',
-                            color: 'inherit',
-                            marginTop: '0.2rem',
-                          }}
+                          className="task-card__assign-select"
                         >
                           <option value="">— nieprzypisany —</option>
                           {assignableUsers.map((u) => (

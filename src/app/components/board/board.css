@@ -256,54 +256,52 @@
   background: rgba(255, 60, 60, 0.3);
 }
 
-@media (prefers-color-scheme: light) {
-  .board-add-task input,
-  .board-add-task__select {
-    background: #fff;
-    border-color: #ccc;
-  }
+html[data-theme="light"] .board-add-task input,
+html[data-theme="light"] .board-add-task__select {
+  background: #fff;
+  border-color: #ccc;
+}
 
-  .board-task__edit-input,
-  .board-task__edit-textarea,
-  .board-task__edit select {
-    background: #fff;
-    border-color: #ccc;
-  }
+html[data-theme="light"] .board-task__edit-input,
+html[data-theme="light"] .board-task__edit-textarea,
+html[data-theme="light"] .board-task__edit select {
+  background: #fff;
+  border-color: #ccc;
+}
 
-  .board-column--todo {
-    background: #f0ebf5;
-    border-color: #b39ddb;
-  }
+html[data-theme="light"] .board-column--todo {
+  background: #f0ebf5;
+  border-color: #b39ddb;
+}
 
-  .board-column--doing {
-    background: #f5f5e0;
-    border-color: #c5c52a;
-  }
+html[data-theme="light"] .board-column--doing {
+  background: #f5f5e0;
+  border-color: #c5c52a;
+}
 
-  .board-column--done {
-    background: #e0f5e5;
-    border-color: #4caf50;
-  }
+html[data-theme="light"] .board-column--done {
+  background: #e0f5e5;
+  border-color: #4caf50;
+}
 
-  .board-task {
-    background: rgba(0, 0, 0, 0.04);
-  }
+html[data-theme="light"] .board-task {
+  background: rgba(0, 0, 0, 0.04);
+}
 
-  .board-task:hover {
-    background: rgba(0, 0, 0, 0.08);
-  }
+html[data-theme="light"] .board-task:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
 
-  .board-task__btn--left,
-  .board-task__btn--right {
-    background: rgba(0, 0, 0, 0.06);
-  }
+html[data-theme="light"] .board-task__btn--left,
+html[data-theme="light"] .board-task__btn--right {
+  background: rgba(0, 0, 0, 0.06);
+}
 
-  .board-task__btn--left:hover,
-  .board-task__btn--right:hover {
-    background: rgba(0, 0, 0, 0.12);
-  }
+html[data-theme="light"] .board-task__btn--left:hover,
+html[data-theme="light"] .board-task__btn--right:hover {
+  background: rgba(0, 0, 0, 0.12);
+}
 
-  .board-task__btn--delete {
-    background: rgba(255, 60, 60, 0.1);
-  }
+html[data-theme="light"] .board-task__btn--delete {
+  background: rgba(255, 60, 60, 0.1);
 }

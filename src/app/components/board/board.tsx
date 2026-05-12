@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import "./board.css";
+import { styled } from "@mui/material/styles";
+import MenuItem from "@mui/material/MenuItem";
+import FormControl from "@mui/material/FormControl";
+import Select from "@mui/material/Select";
+import InputBase from "@mui/material/InputBase";
 import * as api from "../../api/client";
 import { useActiveProject } from "../../context/ActiveProjectContext";
 import type { Story, StoryPriority, StoryState } from "../../types/story";
@@ -15,6 +20,45 @@ const PRIORITY_LABELS: Record<StoryPriority, string> = {
   low: "Niski",
   medium: "Średni",
   high: "Wysoki",
+};
+
+const BootstrapInput = styled(InputBase)(({ theme }) => ({
+  "& .MuiInputBase-input": {
+    borderRadius: 8,
+    position: "relative",
+    backgroundColor: theme.palette.mode === "dark" ? "#1a1a1a" : "#ffffff",
+    border: `1px solid ${theme.palette.mode === "dark" ? "#444" : "#ccc"}`,
+    color: theme.palette.text.primary,
+    fontSize: "1rem",
+    padding: "0.6em 2em 0.6em 1em",
+    transition: theme.transitions.create(["border-color", "box-shadow"]),
+    fontFamily: "inherit",
+    "&:focus": {
+      borderRadius: 8,
+      borderColor: "#646cff",
+      boxShadow: "0 0 0 0.15rem rgba(100,108,255,0.25)",
+    },
+  },
+}));
+
+const darkMenuProps = {
+  slotProps: {
+    paper: {
+      sx: {
+        bgcolor: "#1a1a1a",
+        color: "#fff",
+        border: "1px solid #444",
+        "& .MuiMenuItem-root": { color: "#fff" },
+        "& .MuiMenuItem-root:hover": { bgcolor: "rgba(100,108,255,0.15)" },
+        "& .Mui-selected": { bgcolor: "rgba(100,108,255,0.25)" },
+        "& .Mui-selected:hover": { bgcolor: "rgba(100,108,255,0.35)" },
+      },
+    },
+  },
+};
+
+const selectSx = {
+  "& .MuiSvgIcon-root": { color: "#fff" },
 };
 
 export default function Board() {
@@ -152,13 +196,13 @@ export default function Board() {
       {listError ? <p className="board-error">{listError}</p> : null}
       {actionError ? <p className="board-error">{actionError}</p> : null}
       {loading && !noProject ? (
-        <p className="board-loading">Ładowanie…</p>
+        <p className="board-loading">Ładowanie</p>
       ) : null}
 
       <div className="board-add-task">
         <input
           type="text"
-          placeholder="Nazwa taska"
+          placeholder="Nazwa"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleCreate()}
@@ -166,23 +210,28 @@ export default function Board() {
         />
         <input
           type="text"
-          placeholder="Opis…"
+          placeholder="Opis"
           value={newDescription}
           onChange={(e) => setNewDescription(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleCreate()}
           disabled={noProject || busy}
         />
-        <select
-          className="board-add-task__select"
-          value={newPriority}
-          onChange={(e) => setNewPriority(e.target.value as StoryPriority)}
-          disabled={noProject || busy}
-          aria-label="Priorytet"
-        >
-          <option value="low">{PRIORITY_LABELS.low}</option>
-          <option value="medium">{PRIORITY_LABELS.medium}</option>
-          <option value="high">{PRIORITY_LABELS.high}</option>
-        </select>
+        <FormControl sx={{ minWidth: 120, m: 0 }} variant="standard">
+          <Select
+            id="new-priority-select"
+            value={newPriority}
+            onChange={(e) => setNewPriority(e.target.value as StoryPriority)}
+            input={<BootstrapInput />}
+            disabled={noProject || busy}
+            aria-label="Priorytet"
+            MenuProps={darkMenuProps}
+            sx={selectSx}
+          >
+            <MenuItem value="low">{PRIORITY_LABELS.low}</MenuItem>
+            <MenuItem value="medium">{PRIORITY_LABELS.medium}</MenuItem>
+            <MenuItem value="high">{PRIORITY_LABELS.high}</MenuItem>
+          </Select>
+        </FormControl>
         <button
           type="button"
           onClick={() => void handleCreate()}
@@ -219,20 +268,33 @@ export default function Board() {
                           disabled={busy}
                           rows={2}
                         />
-                        <select
-                          value={editPriority}
-                          onChange={(e) =>
-                            setEditPriority(e.target.value as StoryPriority)
-                          }
-                          disabled={busy}
-                          aria-label="Priorytet"
+                        <FormControl
+                          sx={{ width: "100%", m: 0 }}
+                          variant="standard"
                         >
-                          <option value="low">{PRIORITY_LABELS.low}</option>
-                          <option value="medium">
-                            {PRIORITY_LABELS.medium}
-                          </option>
-                          <option value="high">{PRIORITY_LABELS.high}</option>
-                        </select>
+                          <Select
+                            id={`edit-priority-select-${editingId}`}
+                            value={editPriority}
+                            onChange={(e) =>
+                              setEditPriority(e.target.value as StoryPriority)
+                            }
+                            input={<BootstrapInput />}
+                            disabled={busy}
+                            aria-label="Priorytet"
+                            MenuProps={darkMenuProps}
+                            sx={selectSx}
+                          >
+                            <MenuItem value="low">
+                              {PRIORITY_LABELS.low}
+                            </MenuItem>
+                            <MenuItem value="medium">
+                              {PRIORITY_LABELS.medium}
+                            </MenuItem>
+                            <MenuItem value="high">
+                              {PRIORITY_LABELS.high}
+                            </MenuItem>
+                          </Select>
+                        </FormControl>
                         <div className="board-task__edit-actions">
                           <button
                             type="button"

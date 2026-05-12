@@ -39,3 +39,19 @@
   color: #f87171;
   font-size: 0.9rem;
 }
+
+.app-header__theme-toggle {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+html[data-theme="light"] .app-header {
+  border-bottom-color: rgba(0, 0, 0, 0.12);
+}
+
+html[data-theme="light"] .app-header__project-label select {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #213547;
+}

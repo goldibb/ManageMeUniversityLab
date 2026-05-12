@@ -30,6 +30,8 @@ const userList: User[] = [
   },
 ];
 
+const notifications: Notification[] = [];
+
 export function listProjects(): Project[] {
   return projects;
 }

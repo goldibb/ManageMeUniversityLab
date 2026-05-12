@@ -256,6 +256,16 @@
   background: rgba(255, 60, 60, 0.3);
 }
 
+.task-card__assign-select {
+  font-size: 0.8rem;
+  padding: 0.2em 0.4em;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  color: inherit;
+  margin-top: 0.2rem;
+}
+
 .task-detail {
   margin-top: 1rem;
   padding: 1rem;
@@ -361,59 +371,62 @@
   background: rgba(255, 255, 255, 0.15);
 }
 
-@media (prefers-color-scheme: light) {
-  .task-modal {
-    background: #fff;
-    border-color: #ddd;
-  }
+html[data-theme="light"] .task-modal {
+  background: #fff;
+  border-color: #ddd;
+}
 
-  .task-modal__header {
-    border-bottom-color: rgba(0, 0, 0, 0.08);
-  }
+html[data-theme="light"] .task-modal__header {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
 
-  .task-modal__add input,
-  .task-modal__add select,
-  .task-modal__add textarea,
-  .task-detail__field input,
-  .task-detail__field select,
-  .task-detail__field textarea {
-    background: #fff;
-    border-color: #ccc;
-  }
+html[data-theme="light"] .task-modal__add input,
+html[data-theme="light"] .task-modal__add select,
+html[data-theme="light"] .task-modal__add textarea,
+html[data-theme="light"] .task-detail__field input,
+html[data-theme="light"] .task-detail__field select,
+html[data-theme="light"] .task-detail__field textarea {
+  background: #fff;
+  border-color: #ccc;
+}
 
-  .task-column--todo {
-    background: #f0ebf5;
-    border-color: #b39ddb;
-  }
+html[data-theme="light"] .task-column--todo {
+  background: #f0ebf5;
+  border-color: #b39ddb;
+}
 
-  .task-column--doing {
-    background: #f5f5e0;
-    border-color: #c5c52a;
-  }
+html[data-theme="light"] .task-column--doing {
+  background: #f5f5e0;
+  border-color: #c5c52a;
+}
 
-  .task-column--done {
-    background: #e0f5e5;
-    border-color: #4caf50;
-  }
+html[data-theme="light"] .task-column--done {
+  background: #e0f5e5;
+  border-color: #4caf50;
+}
 
-  .task-card {
-    background: rgba(0, 0, 0, 0.04);
-  }
+html[data-theme="light"] .task-card {
+  background: rgba(0, 0, 0, 0.04);
+}
 
-  .task-card:hover {
-    background: rgba(0, 0, 0, 0.08);
-  }
+html[data-theme="light"] .task-card:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
 
-  .task-detail {
-    background: rgba(0, 0, 0, 0.03);
-    border-color: rgba(0, 0, 0, 0.08);
-  }
+html[data-theme="light"] .task-detail {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
+}
 
-  .task-detail__field label {
-    color: rgba(0, 0, 0, 0.55);
-  }
+html[data-theme="light"] .task-detail__field label {
+  color: rgba(0, 0, 0, 0.55);
+}
 
-  .task-detail__info {
-    color: rgba(0, 0, 0, 0.8);
-  }
+html[data-theme="light"] .task-detail__info {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+html[data-theme="light"] .task-card__assign-select {
+  background: #fff;
+  border-color: #ccc;
 }
