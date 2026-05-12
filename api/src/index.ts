@@ -9,6 +9,7 @@ import type {
   TaskState,
 } from "./types";
 import * as tasksStore from "./tasksStore";
+import * as notificationStore from "./notificationStore";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
@@ -29,12 +30,70 @@ app.get("/projects", (_req, res) => {
   res.json({ projects: store.listProjects() });
 });
 
+app.post("/projects", (req, res) => {
+  const name = typeof req.body?.name === "string" ? req.body.name : "";
+  if (!name.trim()) {
+    res.status(400).json({ error: "Brak nazwy" });
+    return;
+  }
+  const project = store.createProject(name.trim());
+
+  // Powiadomienie: Utworzono nowy projekt (high) — każdy admin
+  const adminIds = store.getAdminIds();
+  adminIds.forEach((adminId) => {
+    notificationStore.createNotification({
+      title: `Utworzono nowy projekt: ${project.name}`,
+      priority: "high",
+      recipientId: adminId,
+    });
+  });
+
+  res.status(201).json(project);
+});
+
 app.get("/users/me", (_req, res) => {
   res.json(store.getCurrentUser());
 });
 
 app.get("/notifications", (_req, res) => {
-  res.json({ notifications: store.listNotifications() });
+  const me = store.getCurrentUser();
+  res.json({ notifications: notificationStore.listNotificationForUser(me.id) });
+});
+
+app.get("/notifications/unread-count", (_req, res) => {
+  const me = store.getCurrentUser();
+  res.json({ count: notificationStore.countNotReadNotifications(me.id) });
+});
+
+app.get("/notifications/:id", (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    res.status(400).json({ error: "Nieprawidłowe id" });
+    return;
+  }
+  const me = store.getCurrentUser();
+  const notification = notificationStore.getNotificationById(id);
+  if (!notification || notification.recipientId !== me.id) {
+    res.status(404).json({ error: "Nie znaleziono powiadomienia" });
+    return;
+  }
+  res.json(notification);
+});
+
+app.patch("/notifications/:id/read", (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    res.status(400).json({ error: "Nieprawidłowe id" });
+    return;
+  }
+  const me = store.getCurrentUser();
+  const notification = notificationStore.getNotificationById(id);
+  if (!notification || notification.recipientId !== me.id) {
+    res.status(404).json({ error: "Nie znaleziono powiadomienia" });
+    return;
+  }
+  const updated = notificationStore.markNotificationAsRead(id);
+  res.json(updated);
 });
 
 app.patch("/users/me/active-project", (req, res) => {
@@ -265,6 +324,12 @@ app.post("/tasks", (req, res) => {
     return;
   }
 
+  const story = storiesStore.getStoryById(storyId);
+  if (!story) {
+    res.status(400).json({ error: "Nieprawidłowa historyjka" });
+    return;
+  }
+
   const created = tasksStore.createTask({
     name,
     description,
@@ -279,6 +344,23 @@ app.post("/tasks", (req, res) => {
     res.status(400).json({ error: "Nieprawidłowa historyjka" });
     return;
   }
+
+  // Powiadomienie: Nowe zadanie w historyjce (medium) — właściciel historyjki
+  notificationStore.createNotification({
+    title: `Nowe zadanie w historyjce "${story.name}": ${created.name}`,
+    priority: "medium",
+    recipientId: story.ownerId,
+  });
+
+  // Powiadomienie: Przypisanie osoby do zadania (high)
+  if (created.assignedUserId !== null) {
+    notificationStore.createNotification({
+      title: `Przypisano Cię do zadania "${created.name}" w historyjce "${story.name}"`,
+      priority: "high",
+      recipientId: created.assignedUserId,
+    });
+  }
+
   res.status(201).json(created);
 });
 
@@ -288,6 +370,12 @@ app.patch("/tasks/:id", (req, res) => {
     res.status(400).json({ error: "Nieprawidłowe id" });
     return;
   }
+  const taskBefore = tasksStore.getTaskById(id);
+  if (!taskBefore) {
+    res.status(404).json({ error: "Nie znaleziono zadania" });
+    return;
+  }
+
   const patch: Parameters<typeof tasksStore.updateTask>[1] = {};
   if (req.body?.name !== undefined) {
     if (typeof req.body.name !== "string") {
@@ -355,6 +443,35 @@ app.patch("/tasks/:id", (req, res) => {
     res.status(404).json({ error: "Nie znaleziono zadania" });
     return;
   }
+
+  const story = storiesStore.getStoryById(updated.storyId);
+
+  // Powiadomienie: Zmiana statusu zadania
+  if (patch.state !== undefined && patch.state !== taskBefore.state && story) {
+    let priority: TaskPriority = "low";
+    if (patch.state === "done") priority = "medium";
+    if (patch.state === "doing") priority = "low";
+    notificationStore.createNotification({
+      title: `Zmiana statusu zadania "${updated.name}" na "${patch.state}" w historyjce "${story.name}"`,
+      priority,
+      recipientId: story.ownerId,
+    });
+  }
+
+  // Powiadomienie: Przypisanie osoby do zadania (high)
+  if (
+    patch.assignedUserId !== undefined &&
+    patch.assignedUserId !== taskBefore.assignedUserId &&
+    patch.assignedUserId !== null &&
+    story
+  ) {
+    notificationStore.createNotification({
+      title: `Przypisano Cię do zadania "${updated.name}" w historyjce "${story.name}"`,
+      priority: "high",
+      recipientId: patch.assignedUserId,
+    });
+  }
+
   res.json(updated);
 });
 
@@ -364,11 +481,25 @@ app.delete("/tasks/:id", (req, res) => {
     res.status(400).json({ error: "Nieprawidłowe id" });
     return;
   }
+  const task = tasksStore.getTaskById(id);
   const ok = tasksStore.deleteTask(id);
   if (!ok) {
     res.status(404).json({ error: "Nie znaleziono zadania" });
     return;
   }
+
+  // Powiadomienie: Usunięcie zadania z historyjki (medium) — właściciel historyjki
+  if (task) {
+    const story = storiesStore.getStoryById(task.storyId);
+    if (story) {
+      notificationStore.createNotification({
+        title: `Usunięto zadanie "${task.name}" z historyjki "${story.name}"`,
+        priority: "medium",
+        recipientId: story.ownerId,
+      });
+    }
+  }
+
   res.status(204).send();
 });
 

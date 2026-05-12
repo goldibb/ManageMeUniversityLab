@@ -15,6 +15,13 @@ const currentUser: CurrentUser = {
 
 const userList: User[] = [
   {
+    id: 1,
+    firstName: "Igor",
+    lastName: "Nejman",
+    activeProjectId: 1,
+    role: "admin",
+  },
+  {
     id: 2,
     firstName: "Maciek",
     lastName: "Śmieszny",
@@ -30,10 +37,15 @@ const userList: User[] = [
   },
 ];
 
-const notifications: Notification[] = [];
-
 export function listProjects(): Project[] {
   return projects;
+}
+
+export function createProject(name: string): Project {
+  const id = projects.length > 0 ? Math.max(...projects.map((p) => p.id)) + 1 : 1;
+  const project: Project = { id, name: name.trim() };
+  projects.push(project);
+  return project;
 }
 
 export function getCurrentUser(): CurrentUser {
@@ -41,7 +53,11 @@ export function getCurrentUser(): CurrentUser {
 }
 
 export function getUserList(): User[] {
-  return userList;
+  return userList.map((u) => ({ ...u }));
+}
+
+export function getAdminIds(): number[] {
+  return userList.filter((u) => u.role === "admin").map((u) => u.id);
 }
 
 export function setActiveProjectId(projectId: number | null): CurrentUser {

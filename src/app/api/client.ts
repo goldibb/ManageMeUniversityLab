@@ -1,6 +1,7 @@
 import type { CurrentUserDto, Project, User } from "../types/project";
 import type { CreateStoryInput, Story, UpdateStoryInput } from "../types/story";
 import type { CreateTaskInput, Task, UpdateTaskInput } from "../types/task";
+import type { Notification } from "../types/notification";
 
 const BASE = "/api";
 
@@ -135,4 +136,38 @@ export async function updateTask(
 export async function deleteTask(id: number): Promise<void> {
   const res = await fetch(`${BASE}/tasks/${id}`, { method: "DELETE" });
   await ensureOk(res);
+}
+
+export async function fetchNotifications(): Promise<Notification[]> {
+  const res = await fetch(`${BASE}/notifications`);
+  const data = await parseJson<{ notifications: Notification[] }>(res);
+  return data.notifications;
+}
+
+export async function fetchUnreadCount(): Promise<number> {
+  const res = await fetch(`${BASE}/notifications/unread-count`);
+  const data = await parseJson<{ count: number }>(res);
+  return data.count;
+}
+
+export async function fetchNotification(id: number): Promise<Notification> {
+  const res = await fetch(`${BASE}/notifications/${id}`);
+  return parseJson(res);
+}
+
+export async function markNotificationAsRead(id: number): Promise<Notification> {
+  const res = await fetch(`${BASE}/notifications/${id}/read`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+  });
+  return parseJson(res);
+}
+
+export async function createProject(name: string): Promise<Project> {
+  const res = await fetch(`${BASE}/projects`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  return parseJson(res);
 }

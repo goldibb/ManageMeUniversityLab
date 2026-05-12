@@ -3,6 +3,15 @@ export interface Project {
   name: string;
 }
 
+export interface Notification {
+  id: number;
+  title: string;
+  created: Date;
+  priority: TaskPriority;
+  seen: boolean;
+  recipientId: number;
+}
+
 export interface CurrentUser {
   id: number;
   firstName: string;

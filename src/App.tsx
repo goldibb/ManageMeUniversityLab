@@ -1,4 +1,10 @@
+import { Routes, Route, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import Board from "./app/components/board/board";
+import NotificationList from "./app/components/notifications/NotificationList";
+import NotificationDetail from "./app/components/notifications/NotificationDetail";
+import NotificationBadge from "./app/components/notifications/NotificationBadge";
+import NotificationDialog from "./app/components/notifications/NotificationDialog";
 import {
   ActiveProjectProvider,
   useActiveProject,
@@ -7,6 +13,8 @@ import { useThemeMode } from "./app/context/ThemeModeContext";
 import { getCurrentUser } from "./app/components/login/mock_user";
 import { styled } from "@mui/material/styles";
 import Switch from "@mui/material/Switch";
+import Button from "@mui/material/Button";
+import * as api from "./app/api/client";
 import "./App.css";
 
 const MaterialUISwitch = styled(Switch)(({ theme }) => ({
@@ -67,14 +75,38 @@ const MaterialUISwitch = styled(Switch)(({ theme }) => ({
 
 function AppHeader() {
   const user = getCurrentUser();
-  const { projects, activeProjectId, setActiveProject, loading, error } =
+  const { projects, activeProjectId, setActiveProject, loading, error, refresh } =
     useActiveProject();
+  const navigate = useNavigate();
+  const [creating, setCreating] = useState(false);
+
+  const handleCreateProject = async () => {
+    const name = window.prompt("Nazwa nowego projektu:");
+    if (!name || !name.trim()) return;
+    setCreating(true);
+    try {
+      await api.createProject(name.trim());
+      await refresh();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Błąd tworzenia projektu");
+    } finally {
+      setCreating(false);
+    }
+  };
 
   return (
     <header className="app-header">
       <span className="app-header__user">
         Witaj, {user.firstName} {user.lastName}
       </span>
+      <nav className="app-header__nav" style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+        <Button color="inherit" onClick={() => navigate("/")}>
+          Board
+        </Button>
+        <Button color="inherit" onClick={() => navigate("/notifications")}>
+          Powiadomienia
+        </Button>
+      </nav>
       <label className="app-header__project-label">
         <select
           value={activeProjectId ?? ""}
@@ -91,7 +123,16 @@ function AppHeader() {
           ))}
         </select>
       </label>
+      <Button
+        variant="outlined"
+        size="small"
+        onClick={() => void handleCreateProject()}
+        disabled={creating || loading}
+      >
+        + Nowy projekt
+      </Button>
       {error ? <span className="app-header__error">{error}</span> : null}
+      <NotificationBadge />
       <ThemeToggle />
     </header>
   );
@@ -111,7 +152,14 @@ function App() {
     <ActiveProjectProvider>
       <div className="app-shell">
         <AppHeader />
-        <Board />
+        <main>
+          <Routes>
+            <Route path="/" element={<Board />} />
+            <Route path="/notifications" element={<NotificationList />} />
+            <Route path="/notifications/:id" element={<NotificationDetail />} />
+          </Routes>
+        </main>
+        <NotificationDialog />
       </div>
     </ActiveProjectProvider>
   );
