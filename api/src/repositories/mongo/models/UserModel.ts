@@ -12,6 +12,7 @@ const UserSchema = new mongoose.Schema({
     default: "guest",
   },
   blocked: { type: Boolean, default: false },
+  passwordHash: { type: String, default: null },
 });
 
 export const UserModel = mongoose.model("User", UserSchema);

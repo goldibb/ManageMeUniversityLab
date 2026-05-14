@@ -5,6 +5,7 @@ import cors from "cors";
 import express, { Request, Response, NextFunction } from "express";
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 import type {
   StoryPriority,
   StoryState,
@@ -179,6 +180,85 @@ app.post(
 
     const token = generateToken(result.user);
     res.json({ token, user: result.user });
+  }),
+);
+
+app.post(
+  "/auth/register",
+  asyncHandler(async (req, res) => {
+    const email =
+      typeof req.body?.email === "string" ? req.body.email.trim() : "";
+    const password =
+      typeof req.body?.password === "string" ? req.body.password : "";
+    const firstName =
+      typeof req.body?.firstName === "string" ? req.body.firstName.trim() : "";
+    const lastName =
+      typeof req.body?.lastName === "string" ? req.body.lastName.trim() : "";
+
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      res.status(400).json({ error: "Nieprawidłowy adres email" });
+      return;
+    }
+    if (password.length < 6) {
+      res.status(400).json({ error: "Hasło musi mieć co najmniej 6 znaków" });
+      return;
+    }
+    if (!firstName) {
+      res.status(400).json({ error: "Imię jest wymagane" });
+      return;
+    }
+    if (!lastName) {
+      res.status(400).json({ error: "Nazwisko jest wymagane" });
+      return;
+    }
+
+    const { users } = getRepositories();
+    const passwordHash = await bcrypt.hash(password, 10);
+    const result = await users.createUserWithPassword({
+      email,
+      firstName,
+      lastName,
+      passwordHash,
+    });
+
+    if (!result.isNew) {
+      res.status(409).json({ error: "Użytkownik z tym emailem już istnieje" });
+      return;
+    }
+
+    const token = generateToken(result.user);
+    res.status(201).json({ token, user: result.user });
+  }),
+);
+
+app.post(
+  "/auth/login",
+  asyncHandler(async (req, res) => {
+    const email =
+      typeof req.body?.email === "string" ? req.body.email.trim() : "";
+    const password =
+      typeof req.body?.password === "string" ? req.body.password : "";
+
+    if (!email || !password) {
+      res.status(400).json({ error: "Email i hasło są wymagane" });
+      return;
+    }
+
+    const { users } = getRepositories();
+    const user = await users.getUserByEmail(email);
+    if (!user) {
+      res.status(401).json({ error: "Nieprawidłowy email lub hasło" });
+      return;
+    }
+
+    const valid = await users.verifyPassword(email, password);
+    if (!valid) {
+      res.status(401).json({ error: "Nieprawidłowy email lub hasło" });
+      return;
+    }
+
+    const token = generateToken(user);
+    res.json({ token, user });
   }),
 );
 

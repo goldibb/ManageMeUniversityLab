@@ -14,6 +14,8 @@ interface AuthContextValue {
   loading: boolean;
   error: string | null;
   login: (credential: string) => Promise<void>;
+  loginWithPassword: (payload: { email: string; password: string }) => Promise<void>;
+  register: (payload: { email: string; password: string; firstName: string; lastName: string }) => Promise<void>;
   logout: () => void;
   isAdmin: boolean;
   isGuest: boolean;
@@ -75,6 +77,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const loginWithPassword = useCallback(
+    async (payload: { email: string; password: string }) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { user: me } = await api.loginWithPassword(payload);
+        setUser(me);
+      } catch (e) {
+        api.setAuthToken(null);
+        setUser(null);
+        setError(e instanceof Error ? e.message : "Błąd logowania");
+        throw e;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
+  const register = useCallback(
+    async (payload: {
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+    }) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { user: me } = await api.register(payload);
+        setUser(me);
+      } catch (e) {
+        api.setAuthToken(null);
+        setUser(null);
+        setError(e instanceof Error ? e.message : "Błąd rejestracji");
+        throw e;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
   const logout = useCallback(() => {
     api.logoutApi().catch(() => {});
     api.setAuthToken(null);
@@ -91,11 +136,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       error,
       login,
+      loginWithPassword,
+      register,
       logout,
       isAdmin,
       isGuest,
     }),
-    [user, loading, error, login, logout, isAdmin, isGuest],
+    [user, loading, error, login, loginWithPassword, register, logout, isAdmin, isGuest],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

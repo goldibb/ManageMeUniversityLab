@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import type { User, UserRole } from "../../types";
 import type { IUserRepository } from "../interfaces/IUserRepository";
 import type { INotificationRepository } from "../interfaces/INotificationRepository";
@@ -57,6 +58,58 @@ export class MemoryUserRepository implements IUserRepository {
     return u ? { ...u } : undefined;
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const u = users.find(
+      (x) => x.email.toLowerCase() === email.toLowerCase(),
+    );
+    return u ? { ...u } : undefined;
+  }
+
+  async createUserWithPassword(payload: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    passwordHash: string;
+  }): Promise<{ user: User; isNew: boolean }> {
+    const existing = users.find(
+      (u) => u.email.toLowerCase() === payload.email.toLowerCase(),
+    );
+    if (existing) {
+      return { user: { ...existing }, isNew: false };
+    }
+
+    const isSuperAdmin =
+      payload.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+    const role: UserRole = isSuperAdmin ? "admin" : "guest";
+
+    const user: User = {
+      id: nextUserId++,
+      email: payload.email.toLowerCase(),
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      activeProjectId: null,
+      role,
+      blocked: false,
+    };
+    users.push(user);
+
+    // Store passwordHash separately since User type doesn't have it
+    (user as any).passwordHash = payload.passwordHash;
+
+    if (!isSuperAdmin && this.notificationRepo) {
+      const admins = users.filter((u) => u.role === "admin");
+      for (const admin of admins) {
+        await this.notificationRepo.createNotification({
+          title: `Nowe konto w systemie: ${user.firstName} ${user.lastName} (${user.email})`,
+          priority: "high",
+          recipientId: admin.id,
+        });
+      }
+    }
+
+    return { user: { ...user }, isNew: true };
+  }
+
   async listUsers(): Promise<User[]> {
     return users.map((u) => ({ ...u }));
   }
@@ -90,5 +143,13 @@ export class MemoryUserRepository implements IUserRepository {
 
   async getAdminIds(): Promise<number[]> {
     return users.filter((u) => u.role === "admin").map((u) => u.id);
+  }
+
+  async verifyPassword(email: string, password: string): Promise<boolean> {
+    const u = users.find(
+      (x) => x.email.toLowerCase() === email.toLowerCase(),
+    );
+    if (!u || !(u as any).passwordHash) return false;
+    return bcrypt.compare(password, (u as any).passwordHash);
   }
 }

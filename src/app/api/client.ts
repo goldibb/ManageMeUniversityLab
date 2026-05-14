@@ -213,6 +213,36 @@ export async function loginWithGoogle(
   return data;
 }
 
+export async function loginWithPassword(payload: {
+  email: string;
+  password: string;
+}): Promise<{ token: string; user: CurrentUserDto }> {
+  const res = await fetch(`${BASE}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await parseJson<{ token: string; user: CurrentUserDto }>(res);
+  setAuthToken(data.token);
+  return data;
+}
+
+export async function register(payload: {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}): Promise<{ token: string; user: CurrentUserDto }> {
+  const res = await fetch(`${BASE}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await parseJson<{ token: string; user: CurrentUserDto }>(res);
+  setAuthToken(data.token);
+  return data;
+}
+
 export async function logoutApi(): Promise<void> {
   const res = await fetch(`${BASE}/auth/logout`, {
     method: "POST",
