@@ -304,6 +304,49 @@ app.post(
   }),
 );
 
+app.patch(
+  "/projects/:id",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const { projects } = getRepositories();
+    const id = Number(req.params.id);
+    const name = typeof req.body?.name === "string" ? req.body.name : "";
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "Nieprawidłowe id" });
+      return;
+    }
+    if (!name.trim()) {
+      res.status(400).json({ error: "Brak nazwy" });
+      return;
+    }
+    const updated = await projects.updateProject(id, name.trim());
+    if (!updated) {
+      res.status(404).json({ error: "Nie znaleziono projektu" });
+      return;
+    }
+    res.json(updated);
+  }),
+);
+
+app.delete(
+  "/projects/:id",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const { projects } = getRepositories();
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "Nieprawidłowe id" });
+      return;
+    }
+    const ok = await projects.deleteProject(id);
+    if (!ok) {
+      res.status(404).json({ error: "Nie znaleziono projektu" });
+      return;
+    }
+    res.status(204).send();
+  }),
+);
+
 // ===== USERS =====
 
 app.get(

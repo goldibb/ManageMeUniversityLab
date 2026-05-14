@@ -97,6 +97,40 @@ function AppHeader() {
     }
   };
 
+  const handleEditProject = async () => {
+    if (activeProjectId == null) return;
+    const current = projects.find((p) => p.id === activeProjectId);
+    const name = window.prompt(
+      "Nowa nazwa projektu:",
+      current?.name ?? "",
+    );
+    if (!name || !name.trim()) return;
+    setCreating(true);
+    try {
+      await api.updateProject(activeProjectId, name.trim());
+      await refresh();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Błąd edycji projektu");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    if (activeProjectId == null) return;
+    if (!window.confirm("Czy na pewno usunąć ten projekt?")) return;
+    setCreating(true);
+    try {
+      await api.deleteProject(activeProjectId);
+      await setActiveProject(null);
+      await refresh();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Błąd usuwania projektu");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
     <header className="app-header">
       <span className="app-header__user">
@@ -142,6 +176,27 @@ function AppHeader() {
       >
         + Nowy projekt
       </Button>
+      {activeProjectId != null && (
+        <>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => void handleEditProject()}
+            disabled={creating || loading}
+          >
+            Edytuj
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            color="error"
+            onClick={() => void handleDeleteProject()}
+            disabled={creating || loading}
+          >
+            Usuń
+          </Button>
+        </>
+      )}
       {error ? <span className="app-header__error">{error}</span> : null}
       <NotificationBadge />
       <Button

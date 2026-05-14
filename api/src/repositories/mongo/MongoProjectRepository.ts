@@ -21,4 +21,19 @@ export class MongoProjectRepository implements IProjectRepository {
     const doc = await ProjectModel.create({ id, name: name.trim() });
     return toProject(doc);
   }
+
+  async updateProject(id: number, name: string): Promise<Project | null> {
+    const doc = await ProjectModel.findOneAndUpdate(
+      { id },
+      { name: name.trim() },
+      { new: true },
+    ).lean();
+    if (!doc) return null;
+    return toProject(doc);
+  }
+
+  async deleteProject(id: number): Promise<boolean> {
+    const result = await ProjectModel.deleteOne({ id });
+    return result.deletedCount > 0;
+  }
 }

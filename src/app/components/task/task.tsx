@@ -46,15 +46,18 @@ export default function TaskModal({ storyId, storyName, onClose }: TaskModalProp
     setLoading(true)
     setError(null)
     try {
-      const [taskList, userList] = await Promise.all([
-        api.fetchTasks(storyId),
-        api.getUsers(),
-      ])
+      const taskList = await api.fetchTasks(storyId)
       setTasks(taskList)
-      setUsers(userList)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Nie udało się pobrać danych')
       setTasks([])
+    }
+    try {
+      const userList = await api.getUsers()
+      setUsers(userList)
+    } catch {
+      /* non-admin users may not fetch user list */
+      setUsers([])
     } finally {
       setLoading(false)
     }

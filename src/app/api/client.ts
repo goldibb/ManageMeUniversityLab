@@ -198,6 +198,26 @@ export async function createProject(name: string): Promise<Project> {
   return parseJson(res);
 }
 
+export async function updateProject(
+  id: number,
+  name: string,
+): Promise<Project> {
+  const res = await fetch(`${BASE}/projects/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+    body: JSON.stringify({ name }),
+  });
+  return parseJson(res);
+}
+
+export async function deleteProject(id: number): Promise<void> {
+  const res = await fetch(`${BASE}/projects/${id}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  await ensureOk(res);
+}
+
 // ===== AUTH =====
 
 export async function loginWithGoogle(
