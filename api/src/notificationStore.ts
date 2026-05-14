@@ -23,9 +23,7 @@ export function getNotificationById(id: number): Notification | undefined {
   return t ? { ...t } : undefined;
 }
 
-export function markNotificationAsRead(
-  id: number,
-): Notification | undefined {
+export function markNotificationAsRead(id: number): Notification | undefined {
   const idx = notifications.findIndex((x) => x.id === id);
   if (idx === -1) return undefined;
   notifications[idx].seen = true;

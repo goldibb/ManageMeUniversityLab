@@ -14,10 +14,22 @@ export interface Notification {
 
 export interface CurrentUser {
   id: number;
+  email: string;
   firstName: string;
   lastName: string;
   activeProjectId: number | null;
   role: UserRole;
+  blocked: boolean;
+}
+
+export interface User {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  activeProjectId: number | null;
+  role: UserRole;
+  blocked: boolean;
 }
 
 export interface User {
@@ -26,9 +38,11 @@ export interface User {
   lastName: string;
   activeProjectId: number | null;
   role: UserRole;
+  email: string;
+  blocked: boolean;
 }
 
-export type UserRole = "admin" | "devops" | "developer";
+export type UserRole = "admin" | "devops" | "developer" | "guest";
 
 export type StoryPriority = "low" | "medium" | "high";
 

@@ -1,16 +1,19 @@
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { useState } from "react";
 import Board from "./app/components/board/board";
 import NotificationList from "./app/components/notifications/NotificationList";
 import NotificationDetail from "./app/components/notifications/NotificationDetail";
 import NotificationBadge from "./app/components/notifications/NotificationBadge";
 import NotificationDialog from "./app/components/notifications/NotificationDialog";
+import LoginPage from "./app/components/login/LoginPage";
+import PendingApprovalPage from "./app/components/login/PendingApprovalPage";
+import UsersList from "./app/components/users/UsersList";
 import {
   ActiveProjectProvider,
   useActiveProject,
 } from "./app/context/ActiveProjectContext";
 import { useThemeMode } from "./app/context/ThemeModeContext";
-import { getCurrentUser } from "./app/components/login/mock_user";
+import { useAuth } from "./app/context/AuthContext";
 import { styled } from "@mui/material/styles";
 import Switch from "@mui/material/Switch";
 import Button from "@mui/material/Button";
@@ -74,7 +77,7 @@ const MaterialUISwitch = styled(Switch)(({ theme }) => ({
 }));
 
 function AppHeader() {
-  const user = getCurrentUser();
+  const { user, logout, isAdmin } = useAuth();
   const { projects, activeProjectId, setActiveProject, loading, error, refresh } =
     useActiveProject();
   const navigate = useNavigate();
@@ -97,15 +100,23 @@ function AppHeader() {
   return (
     <header className="app-header">
       <span className="app-header__user">
-        Witaj, {user.firstName} {user.lastName}
+        {user ? `${user.firstName} ${user.lastName} (${user.email})` : "Gość"}
       </span>
-      <nav className="app-header__nav" style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+      <nav
+        className="app-header__nav"
+        style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
+      >
         <Button color="inherit" onClick={() => navigate("/")}>
           Board
         </Button>
         <Button color="inherit" onClick={() => navigate("/notifications")}>
           Powiadomienia
         </Button>
+        {isAdmin && (
+          <Button color="inherit" onClick={() => navigate("/users")}>
+            Użytkownicy
+          </Button>
+        )}
       </nav>
       <label className="app-header__project-label">
         <select
@@ -133,6 +144,14 @@ function AppHeader() {
       </Button>
       {error ? <span className="app-header__error">{error}</span> : null}
       <NotificationBadge />
+      <Button
+        variant="outlined"
+        size="small"
+        color="inherit"
+        onClick={logout}
+      >
+        Wyloguj
+      </Button>
       <ThemeToggle />
     </header>
   );
@@ -147,7 +166,32 @@ function ThemeToggle() {
   );
 }
 
-function App() {
+function AppRoutes() {
+  const { user, loading, isGuest } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", padding: "2rem" }}>Ładowanie…</div>
+    );
+  }
+
+  if (!user) {
+    return <LoginPage />;
+  }
+
+  if (user.blocked) {
+    return (
+      <div style={{ textAlign: "center", padding: "2rem" }}>
+        <h1>Konto zablokowane</h1>
+        <p>Skontaktuj się z administratorem.</p>
+      </div>
+    );
+  }
+
+  if (isGuest) {
+    return <PendingApprovalPage />;
+  }
+
   return (
     <ActiveProjectProvider>
       <div className="app-shell">
@@ -157,12 +201,18 @@ function App() {
             <Route path="/" element={<Board />} />
             <Route path="/notifications" element={<NotificationList />} />
             <Route path="/notifications/:id" element={<NotificationDetail />} />
+            <Route path="/users" element={<UsersList />} />
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
         <NotificationDialog />
       </div>
     </ActiveProjectProvider>
   );
+}
+
+function App() {
+  return <AppRoutes />;
 }
 
 export default App;
